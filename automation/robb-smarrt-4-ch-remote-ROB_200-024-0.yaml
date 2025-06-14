@@ -1,10 +1,19 @@
 blueprint:
   name: Robb smarrt 4 channel remote controller
-  description: 'This blueprint is for the  Robb smarrt 4 channel remote control (ROBB
-    ROB_200-024-0) when used with zha. (Also supports Vesternet 12 Button Remote Control)
+  description: |
+    This blueprint is for the Robb smarrt 4 channel remote control (ROBB ROB_200-024-0) when used with ZHA.
+    (Also supports Vesternet 12 Button Remote Control.)
 
-    It is for general use so all oval buttons (1-4, S1 and S2) can be connected to any action of your choice. The (1) and (0) button will activate button 1 till 4 is a sequence.
-    This remote supports short button clicks and long button presses (over 4 seconds)
+    - Universal Button Mapping: Assign any action to each of the oval buttons (1–4, S1, S2) on the remote.
+    - Supports All Button Types: Handles both short and long presses for each button, so you can trigger different actions depending on how you press.
+    - “All” Button Sequence: The remote’s “All” function (using the (1) and (0) buttons) triggers a special sequence that can activate or deactivate all four channels at once. The blueprint ensures this “All” action only fires once per press, even though the remote sends multiple rapid events.
+    - Prevents Double Triggers: The remote sends each button event twice in quick succession. The blueprint ensures your actions only run once per press, so you don’t get duplicate triggers.
+    - Reliable for Fast Use: Even if you press buttons quickly or use the “All” function, the blueprint ensures your automations respond correctly and only as intended.
+    - Just select your remote and assign actions to each button in Home Assistant’s UI.
+    - To debounce the events, an input_text entity is needed. This stores a small JSON object Suggested to name it "Robb 4CH Remote State"
+    - You can consder excluding this entity from logbook
+
+    In summary: This blueprint provides reliable event handling for the Robb smarrt 4 channel remote in Home Assistant, supporting custom actions for each button and correct handling of the remote’s event patterns.
 
     Make sure to select the correct sensor for the remote.
 
@@ -23,7 +32,33 @@ blueprint:
               model: ROB_200-024-0
             - integration: zha
               model: ZGRC-KEY-013
-
+          multiple: false
+    robb_4ch_remote_state:
+      name: Robb 4CH Remote State
+      description: 'input_text entity to store remote state and event history'
+      selector:
+        entity:
+          domain: input_text
+    on_button_all_short:
+      name: On button All - short
+      default: []
+      selector:
+        action: {}
+    off_button_all_short:
+      name: Off button All - short
+      default: []
+      selector:
+        action: {}
+    on_button_all_long:
+      name: On button All - long press
+      default: []
+      selector:
+        action: {}
+    off_button_all_long:
+      name: Off button All - long press
+      default: []
+      selector:
+        action: {}
     on_button_1_short:
       name: On button 1 - short
       default: []
@@ -127,96 +162,140 @@ blueprint:
 mode: parallel
 max_exceeded: silent
 trigger:
-- platform: event
-  event_type: zha_event
-  event_data:
-    device_id: !input remote
+  - platform: event
+    event_type: zha_event
+    event_data:
+      device_id: !input remote
 action:
-- variables:
-    button: '{{ trigger.event.data.endpoint_id }}'
-    cmd: '{{ trigger.event.data.command }}'
-- choose:
-  - conditions:
-    - '{{ button == 1 and cmd == ''on'' }}'
-    sequence: !input on_button_1_short
-  - conditions:
-    - '{{ button == 1 and cmd == ''off'' }}'
-    sequence: !input off_button_1_short
-  - conditions:
-    - '{{ button == 1 and cmd == ''move_with_on_off'' }}'
-    sequence:
-    - variables:
-        mode: '{{ trigger.event.data.params.move_mode }}'
-    - if:
-      - condition:
-        - '{{ mode == "MoveMode.Up" }}'
-      then: !input on_button_1_long
-      else: !input off_button_1_long
-  - conditions:
-    - '{{ button == 2 and cmd == ''on'' }}'
-    sequence: !input on_button_2_short
-  - conditions:
-    - '{{ button == 2 and cmd == ''off'' }}'
-    sequence: !input off_button_2_short
-  - conditions:
-    - '{{ button == 2 and cmd == ''move_with_on_off'' }}'
-    sequence:
-    - variables:
-        mode: '{{ trigger.event.data.params.move_mode }}'
-    - if:
-      - condition:
-        - '{{ mode == "MoveMode.Up" }}'
-      then: !input on_button_2_long
-      else: !input off_button_2_long
-  - conditions:
-    - '{{ button == 3 and cmd == ''on'' }}'
-    sequence: !input on_button_3_short
-  - conditions:
-    - '{{ button == 3 and cmd == ''off'' }}'
-    sequence: !input off_button_3_short
-  - conditions:
-    - '{{ button == 3 and cmd == ''move_with_on_off'' }}'
-    sequence:
-    - variables:
-        mode: '{{ trigger.event.data.params.move_mode }}'
-    - if:
-      - condition:
-        - '{{ mode == "MoveMode.Up" }}'
-      then: !input on_button_3_long
-      else: !input off_button_3_long
-  - conditions:
-    - '{{ button == 4 and cmd == ''on'' }}'
-    sequence: !input on_button_4_short
-  - conditions:
-    - '{{ button == 4 and cmd == ''off'' }}'
-    sequence: !input off_button_4_short
-  - conditions:
-    - '{{ button == 4 and cmd == ''move_with_on_off'' }}'
-    sequence:
-    - variables:
-        mode: '{{ trigger.event.data.params.move_mode }}'
-    - if:
-      - condition:
-        - '{{ mode == "MoveMode.Up" }}'
-      then: !input on_button_4_long
-      else: !input off_button_4_long
-  - conditions:
-    - '{{ button == 1 and cmd == "recall" }}'
-    sequence: 
-    - variables:
-        sbutton: '{{ trigger.event.data.params.scene_id }}'
-    - if:
-      - condition:
-        - '{{ sbutton == 1 }}'
-      then: !input s1_button_short
-      else: !input s2_button_short
-  - conditions:
-    - '{{ button == 1 and cmd == "store" }}'
-    sequence: 
-    - variables:
-        sbutton: '{{ trigger.event.data.params.scene_id }}'
-    - if:
-      - condition:
-        - '{{ sbutton == 1 }}'
-      then: !input s1_button_long
-      else: !input s2_button_long
+  - variables:
+      now: '{{ now() | as_timestamp }}'
+      button: '{{ trigger.event.data.endpoint_id | int }}'
+      cmd: '{{ trigger.event.data.command }}'
+      robb_4ch_remote_state: !input robb_4ch_remote_state
+      # Load state, fallback to empty
+      state: >-
+        {% set t = states[robb_4ch_remote_state].state %}
+        {% if t in ['unknown', 'unavailable', None, ''] %}
+          {"timestamp": 0, "endpoint_id": null, "event": 0}
+        {% else %}
+          {{ t | from_json }}
+        {% endif %}
+      # If timeout, reset event count
+      event_count: >-
+        {% if (now - (state.timestamp | default(0))) > 0.2 %}
+          1
+        {% else %}
+          {{ (state.event | int) + 1 }}
+        {% endif %}
+      is_double_event: >-
+        {{ button == (state.endpoint_id | default(none)) and (now - (state.timestamp | default(0))) < 0.2 }}
+      is_all_command: >-
+        {{ event_count == 6 }}
+  # Debug log
+  - service: system_log.write
+    data:
+      message: >-
+        Writing state: {{ {
+          "timestamp": now,
+          "endpoint_id": button,
+          "event": event_count
+        } | to_json }}
+      level: warning
+  # Update state
+  - service: input_text.set_value
+    target:
+      entity_id: !input robb_4ch_remote_state
+    data:
+      value: >-
+        {{ {
+          "timestamp": now,
+          "endpoint_id": button,
+          "event": event_count
+        } | to_json | string }}
+  # Choose actions
+  - choose:
+      - conditions: '{{ is_all_command and cmd == "on" }}'
+        sequence: !input on_button_all_short
+      - conditions: '{{ is_all_command and cmd == "off" }}'
+        sequence: !input off_button_all_short
+      - conditions: '{{ is_all_command and cmd == "move_with_on_off" }}'
+        sequence:
+          - variables:
+              mode: '{{ trigger.event.data.params.move_mode | default("") }}'
+          - choose:
+              - conditions: '{{ mode == "MoveMode.Up" }}'
+                sequence: !input on_button_all_long
+              - conditions: '{{ mode != "MoveMode.Up" }}'
+                sequence: !input off_button_all_long
+      # Regular buttons (only if not in all sequence)
+      - conditions: '{{ is_double_event and not is_all_command and button == 1 and cmd == "on" }}'
+        sequence: !input on_button_1_short
+      - conditions: '{{ is_double_event and not is_all_command and button == 1 and cmd == "off" }}'
+        sequence: !input off_button_1_short
+      - conditions: '{{ is_double_event and not is_all_command and button == 1 and cmd == "move_with_on_off" }}'
+        sequence:
+          - variables:
+              mode: '{{ trigger.event.data.params.move_mode | default("") }}'
+          - choose:
+              - conditions: '{{ mode == "MoveMode.Up" }}'
+                sequence: !input on_button_1_long
+              - conditions: '{{ mode != "MoveMode.Up" }}'
+                sequence: !input off_button_1_long
+      - conditions: '{{ is_double_event and not is_all_command and button == 2 and cmd == "on" }}'
+        sequence: !input on_button_2_short
+      - conditions: '{{ is_double_event and not is_all_command and button == 2 and cmd == "off" }}'
+        sequence: !input off_button_2_short
+      - conditions: '{{ is_double_event and not is_all_command and button == 2 and cmd == "move_with_on_off" }}'
+        sequence:
+          - variables:
+              mode: '{{ trigger.event.data.params.move_mode | default("") }}'
+          - choose:
+              - conditions: '{{ mode == "MoveMode.Up" }}'
+                sequence: !input on_button_2_long
+              - conditions: '{{ mode != "MoveMode.Up" }}'
+                sequence: !input off_button_2_long
+      - conditions: '{{ is_double_event and not is_all_command and button == 3 and cmd == "on" }}'
+        sequence: !input on_button_3_short
+      - conditions: '{{ is_double_event and not is_all_command and button == 3 and cmd == "off" }}'
+        sequence: !input off_button_3_short
+      - conditions: '{{ is_double_event and not is_all_command and button == 3 and cmd == "move_with_on_off" }}'
+        sequence:
+          - variables:
+              mode: '{{ trigger.event.data.params.move_mode | default("") }}'
+          - choose:
+              - conditions: '{{ mode == "MoveMode.Up" }}'
+                sequence: !input on_button_3_long
+              - conditions: '{{ mode != "MoveMode.Up" }}'
+                sequence: !input off_button_3_long
+      - conditions: '{{ is_double_event and not is_all_command and button == 4 and cmd == "on" }}'
+        sequence: !input on_button_4_short
+      - conditions: '{{ is_double_event and not is_all_command and button == 4 and cmd == "off" }}'
+        sequence: !input off_button_4_short
+      - conditions: '{{ is_double_event and not is_all_command and button == 4 and cmd == "move_with_on_off" }}'
+        sequence:
+          - variables:
+              mode: '{{ trigger.event.data.params.move_mode | default("") }}'
+          - choose:
+              - conditions: '{{ mode == "MoveMode.Up" }}'
+                sequence: !input on_button_4_long
+              - conditions: '{{ mode != "MoveMode.Up" }}'
+                sequence: !input off_button_4_long
+      # S1/S2
+      - conditions: '{{ is_double_event and not is_all_command and button == 1 and cmd == "recall" }}'
+        sequence:
+          - variables:
+              sbutton: '{{ trigger.event.data.params.scene_id | default(0) }}'
+          - choose:
+              - conditions: '{{ sbutton == 1 }}'
+                sequence: !input s1_button_short
+              - conditions: '{{ sbutton != 1 }}'
+                sequence: !input s2_button_short
+      - conditions: '{{ is_double_event and not is_all_command and button == 1 and cmd == "store" }}'
+        sequence:
+          - variables:
+              sbutton: '{{ trigger.event.data.params.scene_id | default(0) }}'
+          - choose:
+              - conditions: '{{ sbutton == 1 }}'
+                sequence: !input s1_button_long
+              - conditions: '{{ sbutton != 1 }}'
+                sequence: !input s2_button_long
