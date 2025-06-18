@@ -33,6 +33,7 @@ The available actions are:
 
 This allows you to map any of the button (events) to any action you choose.
 Should now also work for this type: ZGRC-KEY-013
+Now with debouncing thanks to @arnoudkooi
 
 ### automation/robb-smarrt-rgbw-remote-ROB_200-016-0.yaml
 
