@@ -137,7 +137,7 @@ action:
         - '{{ mode == "MoveMode.Up" }}'
       then: !input on_button_1_long
   - conditions:
-    - '{{ button == 1 and cmd == "move" }}'
+    - '{{ button == 1 and ( cmd == "move" or cmd == "move_with_on_off" ) }}'
     sequence:
     - variables:
         mode: '{{ trigger.event.data.params.move_mode }}'
@@ -161,7 +161,7 @@ action:
         - '{{ mode == "MoveMode.Up" }}'
       then: !input on_button_2_long
   - conditions:
-    - '{{ button == 2 and cmd == "move" }}'
+    - '{{ button == 2 and ( cmd == "move" or cmd == "move_with_on_off" ) }}'
     sequence:
     - variables:
         mode: '{{ trigger.event.data.params.move_mode }}'
@@ -185,7 +185,7 @@ action:
         - '{{ mode == "MoveMode.Up" }}'
       then: !input on_button_3_long
   - conditions:
-    - '{{ button == 3 and cmd == "move" }}'
+    - '{{ button == 3 and ( cmd == "move" or cmd == "move_with_on_off" )}}'
     sequence:
     - variables:
         mode: '{{ trigger.event.data.params.move_mode }}'
@@ -209,7 +209,7 @@ action:
         - '{{ mode == "MoveMode.Up" }}'
       then: !input on_button_4_long
   - conditions:
-    - '{{ button == 4 and cmd == "move" }}'
+    - '{{ button == 4 and ( cmd == "move" or cmd == "move_with_on_off" ) }}'
     sequence:
     - variables:
         mode: '{{ trigger.event.data.params.move_mode }}'
